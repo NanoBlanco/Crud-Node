@@ -3,6 +3,10 @@ const morgan = require('morgan');
 const {engine} = require('express-handlebars');
 const path = require('path');
 const { nextTick } = require('process');
+const flash = require('connect-flash');
+const sesion = require('express-session');
+const sesionMysql = require('express-mysql-session');
+const { database } = require('./keys')
 
 // Inicializando
 const app = express();
@@ -21,12 +25,20 @@ app.engine('.hbs', engine({
 app.set('view engine','.hbs');
 
 // Middleware
+app.use(sesion({
+    secret: 'secreto',
+    resave: false,
+    saveUninitialized: false,
+    store: new sesionMysql(database)
+}));
+app.use(flash());
 app.use(morgan('dev'));
 app.use(express.urlencoded({extended: false}));
 app.use(express.json());
 
 // Variables globales
 app.use((req, res, next)=>{
+    app.locals.exito = req.flash('exito');
     next();
 });
 
