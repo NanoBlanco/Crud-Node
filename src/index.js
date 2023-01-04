@@ -1,17 +1,19 @@
 const express = require('express');
 const morgan = require('morgan');
-const {engine} = require('express-handlebars');
 const path = require('path');
-const { nextTick } = require('process');
-const flash = require('connect-flash');
+const {engine} = require('express-handlebars');
 const sesion = require('express-session');
-const sesionMysql = require('express-mysql-session');
+const validator = require('express-validator');
 const passport = require('passport');
+const flash = require('connect-flash');
+const { nextTick } = require('process');
+const sesionMysql = require('express-mysql-session')(sesion);
+
 const { database } = require('./keys');
 
 // Inicializando
 const app = express();
-require('./libs/passport');
+require('./libs/passport.js');
 
 // Configuración
 app.set('port', process.env.PORT || 4000);
@@ -27,22 +29,26 @@ app.engine('.hbs', engine({
 app.set('view engine','.hbs');
 
 // Middleware
+app.use(morgan('dev'));
+app.use(express.urlencoded({extended: false}));
+app.use(express.json());
+
 app.use(sesion({
     secret: 'miSecreto',
     resave: false,
     saveUninitialized: false,
     store: new sesionMysql(database)
 }));
+app.use(flash());
 app.use(passport.initialize());
 app.use(passport.session());
-app.use(flash());
-app.use(morgan('dev'));
-app.use(express.urlencoded({extended: false}));
-app.use(express.json());
+//app.use(validator());
 
 // Variables globales
 app.use((req, res, next)=>{
+    app.locals.message = req.flash('message');
     app.locals.exito = req.flash('exito');
+    app.locals.usuario = req.usuario;
     next();
 });
 
