@@ -39,6 +39,7 @@ app.use(sesion({
     saveUninitialized: false,
     store: new sesionMysql(database)
 }));
+
 app.use(flash());
 app.use(passport.initialize());
 app.use(passport.session());
